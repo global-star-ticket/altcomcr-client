@@ -13,7 +13,7 @@ readonly class AltcomResponse
 
     public static function fromArray(array $data): self
     {
-        $error = ($data['error'] ?? 1);
+        $error = $data['error'] ?? 0;
 
         return new self(success: $error == 0, respuesta: $data['respuesta'] ?? '', data: $data,);
     }

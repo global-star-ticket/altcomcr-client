@@ -1,7 +1,5 @@
 <?php
 
-namespace Altcomcr\Client\Tests\Unit;
-
 use Altcomcr\Client\Enums\Destino;
 use Altcomcr\Client\Enums\IvaCondicion;
 use Altcomcr\Client\Enums\MedioPagoTipo;
@@ -11,131 +9,110 @@ use Altcomcr\Client\Enums\TipoNota;
 use Altcomcr\Client\Enums\TipoPago;
 use Altcomcr\Client\Enums\UnidadMedida;
 use Altcomcr\Client\Enums\UnidadServicio;
-use PHPUnit\Framework\TestCase;
 
-class EnumsTest extends TestCase
-{
-    public function test_moneda_values(): void
-    {
-        $this->assertSame(1, Moneda::Colones->value);
-        $this->assertSame(2, Moneda::Dolares->value);
-        $this->assertSame(3, Moneda::Euros->value);
-    }
+test('moneda values', function () {
+    expect(Moneda::Colones->value)->toBe(1)
+        ->and(Moneda::Dolares->value)->toBe(2)
+        ->and(Moneda::Euros->value)->toBe(3);
+});
 
-    public function test_moneda_from_iso(): void
-    {
-        $this->assertSame(Moneda::Colones, Moneda::fromIso('CRC'));
-        $this->assertSame(Moneda::Dolares, Moneda::fromIso('USD'));
-        $this->assertSame(Moneda::Euros, Moneda::fromIso('EUR'));
-    }
+test('moneda from iso', function () {
+    expect(Moneda::fromIso('CRC'))->toBe(Moneda::Colones)
+        ->and(Moneda::fromIso('USD'))->toBe(Moneda::Dolares)
+        ->and(Moneda::fromIso('EUR'))->toBe(Moneda::Euros);
+});
 
-    public function test_moneda_from_iso_case_insensitive(): void
-    {
-        $this->assertSame(Moneda::Colones, Moneda::fromIso('crc'));
-        $this->assertSame(Moneda::Dolares, Moneda::fromIso('usd'));
-        $this->assertSame(Moneda::Euros, Moneda::fromIso('eur'));
-    }
+test('moneda from iso case insensitive', function () {
+    expect(Moneda::fromIso('crc'))->toBe(Moneda::Colones)
+        ->and(Moneda::fromIso('usd'))->toBe(Moneda::Dolares)
+        ->and(Moneda::fromIso('eur'))->toBe(Moneda::Euros);
+});
 
-    public function test_moneda_from_iso_invalid_throws(): void
-    {
-        $this->expectException(\ValueError::class);
-        Moneda::fromIso('GBP');
-    }
+test('moneda from iso invalid throws', function () {
+    Moneda::fromIso('GBP');
+})->throws(ValueError::class);
 
-    public function test_moneda_iso_method(): void
-    {
-        $this->assertSame('CRC', Moneda::Colones->iso());
-        $this->assertSame('USD', Moneda::Dolares->iso());
-        $this->assertSame('EUR', Moneda::Euros->iso());
-    }
+test('moneda iso method', function () {
+    expect(Moneda::Colones->iso())->toBe('CRC')
+        ->and(Moneda::Dolares->iso())->toBe('USD')
+        ->and(Moneda::Euros->iso())->toBe('EUR');
+});
 
-    public function test_tipo_pago_values(): void
-    {
-        $this->assertSame(1, TipoPago::Contado->value);
-        $this->assertSame(2, TipoPago::Credito->value);
-        $this->assertSame(3, TipoPago::Consignacion->value);
-        $this->assertSame(4, TipoPago::Apartado->value);
-        $this->assertSame(8, TipoPago::CreditoEstado->value);
-        $this->assertSame(10, TipoPago::Credito90Dias->value);
-        $this->assertSame(12, TipoPago::NoNacional->value);
-    }
+test('tipo pago values', function () {
+    expect(TipoPago::Contado->value)->toBe(1)
+        ->and(TipoPago::Credito->value)->toBe(2)
+        ->and(TipoPago::Consignacion->value)->toBe(3)
+        ->and(TipoPago::Apartado->value)->toBe(4)
+        ->and(TipoPago::CreditoEstado->value)->toBe(8)
+        ->and(TipoPago::Credito90Dias->value)->toBe(10)
+        ->and(TipoPago::NoNacional->value)->toBe(12);
+});
 
-    public function test_medio_pago_tipo_values(): void
-    {
-        $this->assertSame(1, MedioPagoTipo::Efectivo->value);
-        $this->assertSame(2, MedioPagoTipo::Tarjeta->value);
-        $this->assertSame(3, MedioPagoTipo::Cheque->value);
-        $this->assertSame(4, MedioPagoTipo::Transferencia->value);
-        $this->assertSame(5, MedioPagoTipo::Terceros->value);
-        $this->assertSame(6, MedioPagoTipo::SinpeMovil->value);
-    }
+test('medio pago tipo values', function () {
+    expect(MedioPagoTipo::Efectivo->value)->toBe(1)
+        ->and(MedioPagoTipo::Tarjeta->value)->toBe(2)
+        ->and(MedioPagoTipo::Cheque->value)->toBe(3)
+        ->and(MedioPagoTipo::Transferencia->value)->toBe(4)
+        ->and(MedioPagoTipo::Terceros->value)->toBe(5)
+        ->and(MedioPagoTipo::SinpeMovil->value)->toBe(6);
+});
 
-    public function test_tipo_identificacion_values(): void
-    {
-        $this->assertSame('01', TipoIdentificacion::Fisico->value);
-        $this->assertSame('02', TipoIdentificacion::Juridico->value);
-        $this->assertSame('03', TipoIdentificacion::Dimex->value);
-        $this->assertSame('04', TipoIdentificacion::Nite->value);
-        $this->assertSame('09', TipoIdentificacion::Extranjero->value);
-    }
+test('tipo identificacion values', function () {
+    expect(TipoIdentificacion::Fisico->value)->toBe('01')
+        ->and(TipoIdentificacion::Juridico->value)->toBe('02')
+        ->and(TipoIdentificacion::Dimex->value)->toBe('03')
+        ->and(TipoIdentificacion::Nite->value)->toBe('04')
+        ->and(TipoIdentificacion::Extranjero->value)->toBe('09');
+});
 
-    public function test_destino_values(): void
-    {
-        $this->assertSame(0, Destino::Tiquete->value);
-        $this->assertSame(1, Destino::Factura->value);
-        $this->assertSame(2, Destino::Exportacion->value);
-    }
+test('destino values', function () {
+    expect(Destino::Tiquete->value)->toBe(0)
+        ->and(Destino::Factura->value)->toBe(1)
+        ->and(Destino::Exportacion->value)->toBe(2);
+});
 
-    public function test_iva_condicion_values(): void
-    {
-        $this->assertSame('01', IvaCondicion::GeneraCreditoIva->value);
-        $this->assertSame('02', IvaCondicion::CreditoParcial->value);
-        $this->assertSame('03', IvaCondicion::BienesCapital->value);
-        $this->assertSame('04', IvaCondicion::GastoCorriente->value);
-        $this->assertSame('05', IvaCondicion::Proporcionalidad->value);
-    }
+test('iva condicion values', function () {
+    expect(IvaCondicion::GeneraCreditoIva->value)->toBe('01')
+        ->and(IvaCondicion::CreditoParcial->value)->toBe('02')
+        ->and(IvaCondicion::BienesCapital->value)->toBe('03')
+        ->and(IvaCondicion::GastoCorriente->value)->toBe('04')
+        ->and(IvaCondicion::Proporcionalidad->value)->toBe('05');
+});
 
-    // ---- ResolvableEnum trait ----
+// ---- ResolvableEnum trait ----
 
-    public function test_resolve_from_enum_instance(): void
-    {
-        $this->assertSame(1, TipoPago::resolve(TipoPago::Contado));
-        $this->assertSame('credito', TipoNota::resolve(TipoNota::Credito));
-        $this->assertSame('Sp', UnidadServicio::resolve(UnidadServicio::ServiciosProfesionales));
-    }
+test('resolve from enum instance', function () {
+    expect(TipoPago::resolve(TipoPago::Contado))->toBe(1)
+        ->and(TipoNota::resolve(TipoNota::Credito))->toBe('credito')
+        ->and(UnidadServicio::resolve(UnidadServicio::ServiciosProfesionales))->toBe('Sp');
+});
 
-    public function test_resolve_from_raw_value(): void
-    {
-        $this->assertSame(1, TipoPago::resolve(1));
-        $this->assertSame('01', TipoIdentificacion::resolve('01'));
-        $this->assertSame('Unid', UnidadMedida::resolve('Unid'));
-    }
+test('resolve from raw value', function () {
+    expect(TipoPago::resolve(1))->toBe(1)
+        ->and(TipoIdentificacion::resolve('01'))->toBe('01')
+        ->and(UnidadMedida::resolve('Unid'))->toBe('Unid');
+});
 
-    public function test_resolve_from_case_name(): void
-    {
-        $this->assertSame(1, TipoPago::resolve('Contado'));
-        $this->assertSame(1, TipoPago::resolve('contado'));
-        $this->assertSame('Sp', UnidadServicio::resolve('ServiciosProfesionales'));
-        $this->assertSame('01', TipoIdentificacion::resolve('Fisico'));
-    }
+test('resolve from case name', function () {
+    expect(TipoPago::resolve('Contado'))->toBe(1)
+        ->and(TipoPago::resolve('contado'))->toBe(1)
+        ->and(UnidadServicio::resolve('ServiciosProfesionales'))->toBe('Sp')
+        ->and(TipoIdentificacion::resolve('Fisico'))->toBe('01');
+});
 
-    public function test_moneda_resolve_from_iso(): void
-    {
-        $this->assertSame(1, Moneda::resolve('CRC'));
-        $this->assertSame(2, Moneda::resolve('usd'));
-        $this->assertSame(3, Moneda::resolve('EUR'));
-    }
+test('moneda resolve from iso', function () {
+    expect(Moneda::resolve('CRC'))->toBe(1)
+        ->and(Moneda::resolve('usd'))->toBe(2)
+        ->and(Moneda::resolve('EUR'))->toBe(3);
+});
 
-    public function test_moneda_resolve_from_enum_and_value(): void
-    {
-        $this->assertSame(1, Moneda::resolve(Moneda::Colones));
-        $this->assertSame(2, Moneda::resolve(2));
-    }
+test('moneda resolve from enum and value', function () {
+    expect(Moneda::resolve(Moneda::Colones))->toBe(1)
+        ->and(Moneda::resolve(2))->toBe(2);
+});
 
-    public function test_enum_json_serialize(): void
-    {
-        $this->assertSame('1', json_encode(TipoPago::Contado));
-        $this->assertSame('"Sp"', json_encode(UnidadServicio::ServiciosProfesionales));
-        $this->assertSame('"credito"', json_encode(TipoNota::Credito));
-    }
-}
+test('enum json serialize', function () {
+    expect(json_encode(TipoPago::Contado))->toBe('1')
+        ->and(json_encode(UnidadServicio::ServiciosProfesionales))->toBe('"Sp"')
+        ->and(json_encode(TipoNota::Credito))->toBe('"credito"');
+});

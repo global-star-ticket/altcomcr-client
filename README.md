@@ -444,23 +444,25 @@ ALTCOM_TEST_ACTIVIDAD=tu-codigo-actividad
 
 ```bash
 # Solo unitarios (no requieren credenciales ni conexión)
-./vendor/bin/phpunit --testsuite unit
+./vendor/bin/pest --testsuite unit
 
 # Solo integración contra sandbox (requiere .env configurado)
-./vendor/bin/phpunit --testsuite integration
+./vendor/bin/pest --group=integration
 
 # Todos los tests
-./vendor/bin/phpunit
+./vendor/bin/pest
 ```
 
 ### Estructura de tests
+
+Los tests usan [Pest PHP](https://pestphp.com/) con sintaxis expresiva basada en `test()` y `expect()`.
 
 | Suite | Descripción |
 |-------|-------------|
 | `unit` | Valida DTOs, payloads, constructores, enums. Sin red. |
 | `integration` | Emite facturas, notas, compras, recibos y anulaciones contra el sandbox real. |
 
-Los tests de integración se ejecutan en orden: `FacturaServiceTest` emite documentos y guarda las claves. Los demás tests (notas, consultas, recibos, anulación) usan esas claves como referencia. Si no hay credenciales configuradas, los tests de integración se saltan automáticamente.
+Los tests de integración se ejecutan en orden: `FacturaServiceTest` emite documentos y guarda las claves en `SharedState`. Los demás tests (notas, consultas, recibos, anulación) usan esas claves como referencia. Si no hay credenciales configuradas, los tests de integración se saltan automáticamente.
 
 ## Licencia
 

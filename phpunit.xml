@@ -11,7 +11,13 @@
             <directory>tests/Unit</directory>
         </testsuite>
         <testsuite name="integration">
-            <directory>tests/Integration</directory>
+            <file>tests/Integration/ConsultaServiceTest.php</file>
+            <file>tests/Integration/FacturaServiceTest.php</file>
+            <file>tests/Integration/CompraServiceTest.php</file>
+            <file>tests/Integration/NotaServiceTest.php</file>
+            <file>tests/Integration/ReciboPagoServiceTest.php</file>
+            <file>tests/Integration/ConsultaHaciendaServiceTest.php</file>
+            <file>tests/Integration/AnulacionServiceTest.php</file>
         </testsuite>
     </testsuites>
 

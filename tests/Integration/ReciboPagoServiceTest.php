@@ -1,35 +1,35 @@
 <?php
 
-namespace Altcomcr\Client\Tests\Integration;
-
 use Altcomcr\Client\Enums\MedioPagoTipo;
-use Altcomcr\Client\Tests\TestCase;
-use PHPUnit\Framework\Attributes\Group;
 
-#[Group('integration')]
-class ReciboPagoServiceTest extends TestCase
-{
-    public static function setUpBeforeClass(): void
-    {
-        static::requiresCredentials();
+beforeAll(function () {
+    validateCredentials();
+});
+
+beforeEach(function () {
+    skipIfInvalidCredentials();
+});
+
+test('emitir recibo pago', function () {
+    $clave = SharedState::$claveFacturaCredito;
+
+    if (empty($clave)) {
+        $this->markTestSkipped('No hay factura a crédito emitida previamente.');
     }
 
-    public function test_emitir_recibo_pago(): void
-    {
-        $clave = FacturaServiceTest::$claveFacturaCredito;
+    $documento = uniqueDocumento('PAG');
 
-        if (empty($clave)) {
-            $this->markTestSkipped('No hay factura a crédito emitida previamente.');
-        }
+    $response = altcom()
+        ->recibosPago()
+        ->emitir(
+            clavedoc: $clave,
+            documento: $documento,
+            monto: 10000,
+            mediopago: MedioPagoTipo::Transferencia,
+            detalle: 'Abono parcial - prueba automatizada',
+        );
 
-        $documento = static::uniqueDocumento('PAG');
-
-        $response = static::altcom()
-            ->recibosPago()
-            ->emitir(clavedoc: $clave, documento: $documento, monto: 10000, mediopago: MedioPagoTipo::Transferencia, detalle: 'Abono parcial - prueba automatizada');
-
-        $this->assertTrue($response->success);
-        $this->assertSame('Aplicado', $response->respuesta);
-        $this->assertNotEmpty($response->getClave());
-    }
-}
+    expect($response->success)->toBeTrue()
+        ->and($response->respuesta)->toBe('Aplicado')
+        ->and($response->getClave())->not->toBeEmpty();
+})->group('integration');

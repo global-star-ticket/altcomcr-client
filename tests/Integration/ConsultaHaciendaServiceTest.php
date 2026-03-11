@@ -1,53 +1,45 @@
 <?php
 
-namespace Altcomcr\Client\Tests\Integration;
+beforeAll(function () {
+    validateCredentials();
+});
 
-use Altcomcr\Client\Tests\TestCase;
-use PHPUnit\Framework\Attributes\Group;
+beforeEach(function () {
+    skipIfInvalidCredentials();
+});
 
-#[Group('integration')]
-class ConsultaHaciendaServiceTest extends TestCase
-{
-    public static function setUpBeforeClass(): void
-    {
-        static::requiresCredentials();
+test('consultar hacienda', function () {
+    $clave = SharedState::$claveFacturaContado;
+
+    if (empty($clave)) {
+        $this->markTestSkipped('No hay factura emitida previamente.');
     }
 
-    public function test_consultar_hacienda(): void
-    {
-        $clave = FacturaServiceTest::$claveFacturaContado;
+    // Esperar un momento para que Hacienda procese
+    sleep(5);
 
-        if (empty($clave)) {
-            $this->markTestSkipped('No hay factura emitida previamente.');
-        }
+    $response = altcom()
+        ->consultas()
+        ->consultarHacienda($clave);
 
-        // Esperar un momento para que Hacienda procese
-        sleep(5);
+    expect($response->success)->toBeTrue()
+        ->and($response->respuesta)->toBe('Ok')
+        ->and($response->getClave())->not->toBeEmpty()
+        ->and($response->getMensajeHacienda())->toBeIn(['Aceptado', 'Rechazado']);
+})->group('integration');
 
-        $response = static::altcom()
-            ->consultas()
-            ->consultarHacienda($clave);
+test('consulta interna', function () {
+    $documento = SharedState::$documentoFacturaContado;
 
-        $this->assertTrue($response->success);
-        $this->assertSame('Ok', $response->respuesta);
-        $this->assertNotEmpty($response->getClave());
-        $this->assertContains($response->getMensajeHacienda(), ['Aceptado', 'Rechazado']);
+    if (empty($documento)) {
+        $this->markTestSkipped('No hay documento de factura previamente emitido.');
     }
 
-    public function test_consulta_interna(): void
-    {
-        $documento = FacturaServiceTest::$documentoFacturaContado;
+    $response = altcom()
+        ->consultas()
+        ->consultarInterno(documento: $documento);
 
-        if (empty($documento)) {
-            $this->markTestSkipped('No hay documento de factura previamente emitido.');
-        }
-
-        $response = static::altcom()
-            ->consultas()
-            ->consultarInterno(documento: $documento);
-
-        $this->assertTrue($response->success);
-        $this->assertNotEmpty($response->getClave());
-        $this->assertNotNull($response->getXml());
-    }
-}
+    expect($response->success)->toBeTrue()
+        ->and($response->getClave())->not->toBeEmpty()
+        ->and($response->getXml())->not->toBeNull();
+})->group('integration');

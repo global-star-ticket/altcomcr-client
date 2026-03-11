@@ -1,8 +1,8 @@
 <?php
 
-namespace Altcomcr\Client\Tests\Unit;
-
+use Altcomcr\Client\Altcom;
 use Altcomcr\Client\AltcomClient;
+use Altcomcr\Client\AltcomFactory;
 use Altcomcr\Client\Services\AnulacionService;
 use Altcomcr\Client\Services\CompraService;
 use Altcomcr\Client\Services\ConsultaService;
@@ -10,105 +10,112 @@ use Altcomcr\Client\Services\FacturaService;
 use Altcomcr\Client\Services\GastoService;
 use Altcomcr\Client\Services\NotaService;
 use Altcomcr\Client\Services\ReciboPagoService;
-use Altcomcr\Client\Altcom;
-use Altcomcr\Client\AltcomFactory;
-use PHPUnit\Framework\TestCase;
 
-class AltcomClientTest extends TestCase
-{
-    private AltcomClient $client;
+beforeEach(function () {
+    $this->client = new AltcomClient(
+        usuario: 'test@example.com',
+        clave: 'secret123',
+        cedula: '123456789',
+        sucursal: '002',
+        terminal: '00003',
+        actividad: '620101',
+        sandbox: true,
+    );
+});
 
-    protected function setUp(): void
-    {
-        $this->client = new AltcomClient(usuario: 'test@example.com', clave: 'secret123', cedula: '123456789', sucursal: '002', terminal: '00003', actividad: '620101', sandbox: true,);
-    }
+test('sandbox url', function () {
+    expect($this->client->getBaseUrl())->toBe('https://sandbox.altcomcr.net/api');
+});
 
-    public function test_sandbox_url(): void
-    {
-        $this->assertSame('https://sandbox.altcomcr.net/api', $this->client->getBaseUrl());
-    }
+test('production url', function () {
+    $client = new AltcomClient(
+        usuario: 'test@example.com',
+        clave: 'secret',
+        cedula: '123',
+        sandbox: false,
+    );
 
-    public function test_production_url(): void
-    {
-        $client = new AltcomClient(usuario: 'test@example.com', clave: 'secret', cedula: '123', sandbox: false,);
+    expect($client->getBaseUrl())->toBe('https://www.altcomcr.net/f/api');
+});
 
-        $this->assertSame('https://www.altcomcr.net/f/api', $client->getBaseUrl());
-    }
+test('custom base url', function () {
+    $client = new AltcomClient(
+        usuario: 'test@example.com',
+        clave: 'secret',
+        cedula: '123',
+        baseUrl: 'https://custom.api.com/v1',
+    );
 
-    public function test_custom_base_url(): void
-    {
-        $client = new AltcomClient(usuario: 'test@example.com', clave: 'secret', cedula: '123', baseUrl: 'https://custom.api.com/v1',);
+    expect($client->getBaseUrl())->toBe('https://custom.api.com/v1');
+});
 
-        $this->assertSame('https://custom.api.com/v1', $client->getBaseUrl());
-    }
+test('getters', function () {
+    expect($this->client->getCedula())->toBe('123456789')
+        ->and($this->client->getSucursal())->toBe('002')
+        ->and($this->client->getTerminal())->toBe('00003')
+        ->and($this->client->getActividad())->toBe('620101');
+});
 
-    public function test_getters(): void
-    {
-        $this->assertSame('123456789', $this->client->getCedula());
-        $this->assertSame('002', $this->client->getSucursal());
-        $this->assertSame('00003', $this->client->getTerminal());
-        $this->assertSame('620101', $this->client->getActividad());
-    }
+test('build credentials hashes password', function () {
+    $credentials = $this->client->buildCredentials();
 
-    public function test_build_credentials_hashes_password(): void
-    {
-        $credentials = $this->client->buildCredentials();
+    expect($credentials['usuario'])->toBe('test@example.com')
+        ->and($credentials['clave'])->toBe(sha1('secret123'))
+        ->and($credentials)->not->toHaveKey('cedula');
+});
 
-        $this->assertSame('test@example.com', $credentials['usuario']);
-        $this->assertSame(sha1('secret123'), $credentials['clave']);
-        $this->assertArrayNotHasKey('cedula', $credentials);
-    }
+test('build base payload includes cedula', function () {
+    $payload = $this->client->buildBasePayload();
 
-    public function test_build_base_payload_includes_cedula(): void
-    {
-        $payload = $this->client->buildBasePayload();
+    expect($payload['usuario'])->toBe('test@example.com')
+        ->and($payload['clave'])->toBe(sha1('secret123'))
+        ->and($payload['cedula'])->toBe('123456789')
+        ->and($payload['sucursal'])->toBe('002')
+        ->and($payload['terminal'])->toBe('00003');
+});
 
-        $this->assertSame('test@example.com', $payload['usuario']);
-        $this->assertSame(sha1('secret123'), $payload['clave']);
-        $this->assertSame('123456789', $payload['cedula']);
-        $this->assertSame('002', $payload['sucursal']);
-        $this->assertSame('00003', $payload['terminal']);
-    }
+test('build base payload omits default sucursal and terminal', function () {
+    $client = new AltcomClient(
+        usuario: 'test@example.com',
+        clave: 'secret',
+        cedula: '123',
+    );
 
-    public function test_build_base_payload_omits_default_sucursal_and_terminal(): void
-    {
-        $client = new AltcomClient(usuario: 'test@example.com', clave: 'secret', cedula: '123',);
+    $payload = $client->buildBasePayload();
 
-        $payload = $client->buildBasePayload();
+    expect($payload)->not->toHaveKey('sucursal')
+        ->and($payload)->not->toHaveKey('terminal');
+});
 
-        $this->assertArrayNotHasKey('sucursal', $payload);
-        $this->assertArrayNotHasKey('terminal', $payload);
-    }
+test('altcom make factory', function () {
+    $altcom = Altcom::make(usuario: 'test@example.com', clave: 'secret', cedula: '123');
 
-    public function test_altcom_make_factory(): void
-    {
-        $altcom = Altcom::make(usuario: 'test@example.com', clave: 'secret', cedula: '123');
+    expect($altcom)->toBeInstanceOf(Altcom::class)
+        ->and($altcom->client())->toBeInstanceOf(AltcomClient::class);
+});
 
-        $this->assertInstanceOf(Altcom::class, $altcom);
-        $this->assertInstanceOf(AltcomClient::class, $altcom->client());
-    }
+test('altcom service accessors', function () {
+    $altcom = Altcom::make('a', 'b', 'c');
 
-    public function test_altcom_service_accessors(): void
-    {
-        $altcom = Altcom::make('a', 'b', 'c');
+    expect($altcom->facturas())->toBeInstanceOf(FacturaService::class)
+        ->and($altcom->notas())->toBeInstanceOf(NotaService::class)
+        ->and($altcom->consultas())->toBeInstanceOf(ConsultaService::class)
+        ->and($altcom->gastos())->toBeInstanceOf(GastoService::class)
+        ->and($altcom->compras())->toBeInstanceOf(CompraService::class)
+        ->and($altcom->recibosPago())->toBeInstanceOf(ReciboPagoService::class)
+        ->and($altcom->anulacion())->toBeInstanceOf(AnulacionService::class);
+});
 
-        $this->assertInstanceOf(FacturaService::class, $altcom->facturas());
-        $this->assertInstanceOf(NotaService::class, $altcom->notas());
-        $this->assertInstanceOf(ConsultaService::class, $altcom->consultas());
-        $this->assertInstanceOf(GastoService::class, $altcom->gastos());
-        $this->assertInstanceOf(CompraService::class, $altcom->compras());
-        $this->assertInstanceOf(ReciboPagoService::class, $altcom->recibosPago());
-        $this->assertInstanceOf(AnulacionService::class, $altcom->anulacion());
-    }
+test('altcom factory class', function () {
+    $factory = new AltcomFactory(
+        sandbox: true,
+        timeout: 15,
+        retries: 2,
+        retryDelay: 50,
+    );
 
-    public function test_altcom_factory_class(): void
-    {
-        $factory = new AltcomFactory(sandbox: true, timeout: 15, retries: 2, retryDelay: 50,);
+    $altcom = $factory->make(usuario: 'test@example.com', clave: 'secret', cedula: '123');
 
-        $altcom = $factory->make(usuario: 'test@example.com', clave: 'secret', cedula: '123');
-
-        $this->assertInstanceOf(Altcom::class, $altcom);
-        $this->assertSame('https://sandbox.altcomcr.net/api', $altcom->client()
-            ->getBaseUrl());
-    }
-}
+    expect($altcom)->toBeInstanceOf(Altcom::class)
+        ->and($altcom->client()->getBaseUrl())->toBe('https://sandbox.altcomcr.net/api');
+});

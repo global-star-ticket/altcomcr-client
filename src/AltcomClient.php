@@ -6,6 +6,7 @@ use Altcomcr\Client\DTOs\AltcomResponse;
 use Altcomcr\Client\Exceptions\AltcomApiException;
 use Altcomcr\Client\Exceptions\AltcomConnectionException;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 
 class AltcomClient
@@ -143,7 +144,18 @@ class AltcomClient
                 ]);
 
                 break;
+            } catch (ClientException $e) {
+                // Errores 4xx — respuesta del servidor, no reintentar
+                $responseBody = $e->getResponse()->getBody()->getContents();
+                $data         = json_decode($responseBody, true) ?? [];
+
+                if (! empty($data)) {
+                    throw AltcomApiException::fromResponse($data);
+                }
+
+                throw new AltcomApiException($e->getMessage(), $responseBody, $e->getCode(), $e);
             } catch (GuzzleException $e) {
+                // Errores de conexión/red/5xx — reintentar
                 if ($attempt >= $this->retries) {
                     throw new AltcomConnectionException("Error de conexión con Altcom: {$e->getMessage()}", '', 0, $e);
                 }

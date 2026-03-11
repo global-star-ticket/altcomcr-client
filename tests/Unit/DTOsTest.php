@@ -1,206 +1,243 @@
 <?php
 
-namespace Altcomcr\Client\Tests\Unit;
-
 use Altcomcr\Client\DTOs\AltcomResponse;
 use Altcomcr\Client\DTOs\CargoExtra;
 use Altcomcr\Client\DTOs\Exoneracion;
 use Altcomcr\Client\DTOs\LineaDetalle;
 use Altcomcr\Client\DTOs\MedioPago;
 use Altcomcr\Client\DTOs\OtroTexto;
-use PHPUnit\Framework\TestCase;
 
-class DTOsTest extends TestCase
-{
-    // ---- LineaDetalle ----
+// ---- LineaDetalle ----
 
-    public function test_linea_detalle_to_array_minimal(): void
-    {
-        $linea = new LineaDetalle(codigo: '001', unidad: 'Sp', descripcion: 'Servicio', cantidad: 1, precio: 10000, cabys: '8531100000100',);
+test('linea detalle to array minimal', function () {
+    $linea = new LineaDetalle(
+        codigo: '001',
+        unidad: 'Sp',
+        descripcion: 'Servicio',
+        cantidad: 1,
+        precio: 10000,
+        cabys: '8313100000100',
+    );
 
-        $arr = $linea->toArray();
+    $arr = $linea->toArray();
 
-        $this->assertSame('001', $arr['codigo']);
-        $this->assertSame('Sp', $arr['unidad']);
-        $this->assertSame('Servicio', $arr['descripcion']);
-        $this->assertSame(1.0, $arr['cantidad']);
-        $this->assertSame(10000.0, $arr['precio']);
-        $this->assertSame('8531100000100', $arr['cabys']);
-        $this->assertSame(13, $arr['impuesto']);
-        $this->assertSame(0.0, $arr['descuento']);
-        $this->assertArrayNotHasKey('exonerado', $arr);
-        $this->assertArrayNotHasKey('vin', $arr);
-        $this->assertArrayNotHasKey('farma_reg', $arr);
-    }
+    expect($arr['codigo'])->toBe('001')
+        ->and($arr['unidad'])->toBe('Sp')
+        ->and($arr['descripcion'])->toBe('Servicio')
+        ->and($arr['cantidad'])->toBe(1.0)
+        ->and($arr['precio'])->toBe(10000.0)
+        ->and($arr['cabys'])->toBe('8313100000100')
+        ->and($arr['impuesto'])->toBe(13)
+        ->and($arr['descuento'])->toBe(0.0)
+        ->and($arr)->not->toHaveKey('exonerado')
+        ->and($arr)->not->toHaveKey('vin')
+        ->and($arr)->not->toHaveKey('farma_reg');
+});
 
-    public function test_linea_detalle_with_exoneracion(): void
-    {
-        $exo = new Exoneracion(tipodocumento: '04', numerodocumento: 'AL-001', nombreinstitucion: '01', fechaemision: '2024-01-01T08:00:00', porcentajecompra: 13,);
+test('linea detalle with exoneracion', function () {
+    $exo = new Exoneracion(
+        tipodocumento: '04',
+        numerodocumento: 'AL-001',
+        nombreinstitucion: '01',
+        fechaemision: '2024-01-01T08:00:00',
+        porcentajecompra: 13,
+    );
 
-        $linea = new LineaDetalle(codigo: '001', unidad: 'Sp', descripcion: 'Exonerado', cantidad: 1, precio: 5000, cabys: '8531100000100', impuesto: 13, exonerado: $exo,);
+    $linea = new LineaDetalle(
+        codigo: '001',
+        unidad: 'Sp',
+        descripcion: 'Exonerado',
+        cantidad: 1,
+        precio: 5000,
+        cabys: '8313100000100',
+        impuesto: 13,
+        exonerado: $exo,
+    );
 
-        $arr = $linea->toArray();
+    $arr = $linea->toArray();
 
-        $this->assertArrayHasKey('exonerado', $arr);
-        $this->assertSame('04', $arr['exonerado']['tipodocumento']);
-        $this->assertSame(13, $arr['exonerado']['porcentajecompra']);
-    }
+    expect($arr)->toHaveKey('exonerado')
+        ->and($arr['exonerado']['tipodocumento'])->toBe('04')
+        ->and($arr['exonerado']['porcentajecompra'])->toBe(13);
+});
 
-    public function test_linea_detalle_with_vehicle_vin(): void
-    {
-        $linea = new LineaDetalle(codigo: 'V01', unidad: 'Unid', descripcion: 'Vehículo', cantidad: 1, precio: 15000000, cabys: '4911000000000', vin: 'WVWZZZ3CZWE123456',);
+test('linea detalle with vehicle vin', function () {
+    $linea = new LineaDetalle(
+        codigo: 'V01',
+        unidad: 'Unid',
+        descripcion: 'Vehículo',
+        cantidad: 1,
+        precio: 15000000,
+        cabys: '4911399000000',
+        vin: 'WVWZZZ3CZWE123456',
+    );
 
-        $arr = $linea->toArray();
-        $this->assertSame('WVWZZZ3CZWE123456', $arr['vin']);
-    }
+    $arr = $linea->toArray();
+    expect($arr['vin'])->toBe('WVWZZZ3CZWE123456');
+});
 
-    // ---- Exoneracion ----
+// ---- Exoneracion ----
 
-    public function test_exoneracion_to_array_omits_nulls(): void
-    {
-        $exo = new Exoneracion(tipodocumento: '04', numerodocumento: 'AL-001', nombreinstitucion: '01', fechaemision: '2024-01-01T08:00:00',);
+test('exoneracion to array omits nulls', function () {
+    $exo = new Exoneracion(
+        tipodocumento: '04',
+        numerodocumento: 'AL-001',
+        nombreinstitucion: '01',
+        fechaemision: '2024-01-01T08:00:00',
+    );
 
-        $arr = $exo->toArray();
+    $arr = $exo->toArray();
 
-        $this->assertCount(4, $arr);
-        $this->assertArrayNotHasKey('articulo', $arr);
-        $this->assertArrayNotHasKey('inciso', $arr);
-        $this->assertArrayNotHasKey('porcentajecompra', $arr);
-    }
+    expect($arr)->toHaveCount(4)
+        ->and($arr)->not->toHaveKey('articulo')
+        ->and($arr)->not->toHaveKey('inciso')
+        ->and($arr)->not->toHaveKey('porcentajecompra');
+});
 
-    public function test_exoneracion_with_articulo_inciso(): void
-    {
-        $exo = new Exoneracion(tipodocumento: '02', numerodocumento: 'Ley9635', nombreinstitucion: '01', fechaemision: '2024-01-01T08:00:00', articulo: '5', inciso: 'a', porcentajecompra: 100,);
+test('exoneracion with articulo inciso', function () {
+    $exo = new Exoneracion(
+        tipodocumento: '02',
+        numerodocumento: 'Ley9635',
+        nombreinstitucion: '01',
+        fechaemision: '2024-01-01T08:00:00',
+        articulo: '5',
+        inciso: 'a',
+        porcentajecompra: 100,
+    );
 
-        $arr = $exo->toArray();
-        $this->assertSame('5', $arr['articulo']);
-        $this->assertSame('a', $arr['inciso']);
-        $this->assertSame(100, $arr['porcentajecompra']);
-    }
+    $arr = $exo->toArray();
+    expect($arr['articulo'])->toBe('5')
+        ->and($arr['inciso'])->toBe('a')
+        ->and($arr['porcentajecompra'])->toBe(100);
+});
 
-    // ---- MedioPago ----
+// ---- MedioPago ----
 
-    public function test_medio_pago_to_array(): void
-    {
-        $mp  = new MedioPago(tipomp: 2, montomp: 15000.50);
-        $arr = $mp->toArray();
+test('medio pago to array', function () {
+    $mp  = new MedioPago(tipomp: 2, montomp: 15000.50);
+    $arr = $mp->toArray();
 
-        $this->assertSame('2', $arr['tipomp']);
-        $this->assertSame('15000.5', $arr['montomp']);
-    }
+    expect($arr['tipomp'])->toBe('2')
+        ->and($arr['montomp'])->toBe('15000.5');
+});
 
-    public function test_medio_pago_without_monto(): void
-    {
-        $mp  = new MedioPago(tipomp: 1);
-        $arr = $mp->toArray();
+test('medio pago without monto', function () {
+    $mp  = new MedioPago(tipomp: 1);
+    $arr = $mp->toArray();
 
-        $this->assertSame('1', $arr['tipomp']);
-        $this->assertArrayNotHasKey('montomp', $arr);
-    }
+    expect($arr['tipomp'])->toBe('1')
+        ->and($arr)->not->toHaveKey('montomp');
+});
 
-    // ---- CargoExtra ----
+// ---- CargoExtra ----
 
-    public function test_cargo_extra_minimal(): void
-    {
-        $cargo = new CargoExtra(tipocargo: '06', detalle: 'Servicio saloneros 10%', monto: 5000,);
+test('cargo extra minimal', function () {
+    $cargo = new CargoExtra(
+        tipocargo: '06',
+        detalle: 'Servicio saloneros 10%',
+        monto: 5000,
+    );
 
-        $arr = $cargo->toArray();
+    $arr = $cargo->toArray();
 
-        $this->assertSame('06', $arr['tipocargo']);
-        $this->assertSame('Servicio saloneros 10%', $arr['detalle']);
-        $this->assertSame(5000.0, $arr['monto']);
-        $this->assertArrayNotHasKey('tipoid', $arr);
-    }
+    expect($arr['tipocargo'])->toBe('06')
+        ->and($arr['detalle'])->toBe('Servicio saloneros 10%')
+        ->and($arr['monto'])->toBe(5000.0)
+        ->and($arr)->not->toHaveKey('tipoid');
+});
 
-    public function test_cargo_extra_tercero(): void
-    {
-        $cargo = new CargoExtra(tipocargo: '04', detalle: 'Cobro tercero', monto: 1000, tipoid: '01', identificacion: '123456789', nombre: 'Juan Pérez',);
+test('cargo extra tercero', function () {
+    $cargo = new CargoExtra(
+        tipocargo: '04',
+        detalle: 'Cobro tercero',
+        monto: 1000,
+        tipoid: '01',
+        identificacion: '123456789',
+        nombre: 'Juan Pérez',
+    );
 
-        $arr = $cargo->toArray();
-        $this->assertSame('01', $arr['tipoid']);
-        $this->assertSame('123456789', $arr['identificación']);
-        $this->assertSame('Juan Pérez', $arr['nombre']);
-    }
+    $arr = $cargo->toArray();
+    expect($arr['tipoid'])->toBe('01')
+        ->and($arr['identificación'])->toBe('123456789')
+        ->and($arr['nombre'])->toBe('Juan Pérez');
+});
 
-    // ---- OtroTexto ----
+// ---- OtroTexto ----
 
-    public function test_otro_texto_minimal(): void
-    {
-        $otro = new OtroTexto(valor: 'codigo123', contenido: 'Texto libre');
-        $arr  = $otro->toArray();
+test('otro texto minimal', function () {
+    $otro = new OtroTexto(valor: 'codigo123', contenido: 'Texto libre');
+    $arr  = $otro->toArray();
 
-        $this->assertSame('codigo123', $arr['valor']);
-        $this->assertSame('Texto libre', $arr['contenido']);
-        $this->assertArrayNotHasKey('atributo', $arr);
-    }
+    expect($arr['valor'])->toBe('codigo123')
+        ->and($arr['contenido'])->toBe('Texto libre')
+        ->and($arr)->not->toHaveKey('atributo');
+});
 
-    public function test_otro_texto_referencia_ice(): void
-    {
-        $otro = new OtroTexto(valor: 'Orden', contenido: 'OC-123456', atributo: 'Referencia',);
+test('otro texto referencia ice', function () {
+    $otro = new OtroTexto(
+        valor: 'Orden',
+        contenido: 'OC-123456',
+        atributo: 'Referencia',
+    );
 
-        $arr = $otro->toArray();
-        $this->assertSame('Referencia', $arr['atributo']);
-        $this->assertSame('Orden', $arr['valor']);
-        $this->assertSame('OC-123456', $arr['contenido']);
-    }
+    $arr = $otro->toArray();
+    expect($arr['atributo'])->toBe('Referencia')
+        ->and($arr['valor'])->toBe('Orden')
+        ->and($arr['contenido'])->toBe('OC-123456');
+});
 
-    // ---- AltcomResponse ----
+// ---- AltcomResponse ----
 
-    public function test_response_success(): void
-    {
-        $response = AltcomResponse::fromArray([
-                                                  'respuesta'   => 'Aplicado',
-                                                  'Clave'       => str_repeat('1', 50),
-                                                  'Consecutivo' => str_repeat('2', 20),
-                                                  'Firmado'     => '2024-01-01T08:00:00',
-                                                  'Doc'         => 1,
-                                                  'Xml'         => base64_encode('<xml/>'),
-                                                  'error'       => 0,
-                                                  'total'       => 11300,
-                                                  'impuesto'    => 1300,
-                                              ]);
+test('response success', function () {
+    $response = AltcomResponse::fromArray([
+        'respuesta'   => 'Aplicado',
+        'Clave'       => str_repeat('1', 50),
+        'Consecutivo' => str_repeat('2', 20),
+        'Firmado'     => '2024-01-01T08:00:00',
+        'Doc'         => 1,
+        'Xml'         => base64_encode('<xml/>'),
+        'error'       => 0,
+        'total'       => 11300,
+        'impuesto'    => 1300,
+    ]);
 
-        $this->assertTrue($response->success);
-        $this->assertSame('Aplicado', $response->respuesta);
-        $this->assertSame(str_repeat('1', 50), $response->getClave());
-        $this->assertSame(str_repeat('2', 20), $response->getConsecutivo());
-        $this->assertSame(1, $response->getDoc());
-        $this->assertSame(11300.0, $response->getTotal());
-        $this->assertSame(1300.0, $response->getImpuesto());
-        $this->assertSame('2024-01-01T08:00:00', $response->getFirmado());
-        $this->assertSame('<xml/>', $response->getXmlDecoded());
-    }
+    expect($response->success)->toBeTrue()
+        ->and($response->respuesta)->toBe('Aplicado')
+        ->and($response->getClave())->toBe(str_repeat('1', 50))
+        ->and($response->getConsecutivo())->toBe(str_repeat('2', 20))
+        ->and($response->getDoc())->toBe(1)
+        ->and($response->getTotal())->toBe(11300.0)
+        ->and($response->getImpuesto())->toBe(1300.0)
+        ->and($response->getFirmado())->toBe('2024-01-01T08:00:00')
+        ->and($response->getXmlDecoded())->toBe('<xml/>');
+});
 
-    public function test_response_error(): void
-    {
-        $response = AltcomResponse::fromArray([
-                                                  'respuesta' => 'Documento duplicado',
-                                                  'error'     => 1,
-                                              ]);
+test('response error', function () {
+    $response = AltcomResponse::fromArray([
+        'respuesta' => 'Documento duplicado',
+        'error'     => 1,
+    ]);
 
-        $this->assertFalse($response->success);
-        $this->assertSame('Documento duplicado', $response->respuesta);
-        $this->assertNull($response->getClave());
-    }
+    expect($response->success)->toBeFalse()
+        ->and($response->respuesta)->toBe('Documento duplicado')
+        ->and($response->getClave())->toBeNull();
+});
 
-    public function test_response_hacienda_fields(): void
-    {
-        $response = AltcomResponse::fromArray([
-                                                  'respuesta'       => 'Ok',
-                                                  'mensaje'         => 'Aceptado',
-                                                  'error'           => 0,
-                                                  'HaciendaDetalle' => '',
-                                              ]);
+test('response hacienda fields', function () {
+    $response = AltcomResponse::fromArray([
+        'respuesta'       => 'Ok',
+        'mensaje'         => 'Aceptado',
+        'error'           => 0,
+        'HaciendaDetalle' => '',
+    ]);
 
-        $this->assertSame('Aceptado', $response->getMensajeHacienda());
-        $this->assertSame('', $response->getHaciendaDetalle());
-    }
+    expect($response->getMensajeHacienda())->toBe('Aceptado')
+        ->and($response->getHaciendaDetalle())->toBe('');
+});
 
-    public function test_response_to_array(): void
-    {
-        $data     = ['respuesta' => 'Ok', 'error' => 0];
-        $response = AltcomResponse::fromArray($data);
+test('response to array', function () {
+    $data     = ['respuesta' => 'Ok', 'error' => 0];
+    $response = AltcomResponse::fromArray($data);
 
-        $this->assertSame($data, $response->toArray());
-    }
-}
+    expect($response->toArray())->toBe($data);
+});

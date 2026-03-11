@@ -36,10 +36,16 @@ trait ResolvableEnum
             return $input->value;
         }
 
-        // Intentar por valor directo
-        $found = self::tryFrom($input);
-        if ($found !== null) {
-            return $found->value;
+        // Intentar por valor directo (solo si el tipo coincide con el backing type)
+        $backingType = (new \ReflectionEnum(self::class))->getBackingType();
+        $compatible  = ($backingType?->getName() === 'int' && is_int($input))
+            || ($backingType?->getName() === 'string' && is_string($input));
+
+        if ($compatible) {
+            $found = self::tryFrom($input);
+            if ($found !== null) {
+                return $found->value;
+            }
         }
 
         // Intentar por nombre del case (case-insensitive)

@@ -1,48 +1,60 @@
 <?php
 
-namespace Altcomcr\Client\Tests\Integration;
-
 use Altcomcr\Client\DTOs\LineaDetalle;
 use Altcomcr\Client\Enums\MedioPagoTipo;
 use Altcomcr\Client\Enums\Moneda;
 use Altcomcr\Client\Enums\TipoIdentificacion;
 use Altcomcr\Client\Enums\TipoPago;
 use Altcomcr\Client\Enums\UnidadServicio;
-use Altcomcr\Client\Tests\TestCase;
-use PHPUnit\Framework\Attributes\Group;
 
-#[Group('integration')]
-class CompraServiceTest extends TestCase
-{
-    public static function setUpBeforeClass(): void
-    {
-        static::requiresCredentials();
-    }
+beforeAll(function () {
+    validateCredentials();
+});
 
-    public function test_emitir_factura_compra_extranjero(): void
-    {
-        $documento = static::uniqueDocumento('FC');
-        $fecha     = date('Y-m-d H:i:s');
-        $tipodoc   = '16'; // Extranjero
+beforeEach(function () {
+    skipIfInvalidCredentials();
+});
 
-        $proveedor = [
-            'prov_cedula'    => 'EXTTEST12345',
-            'prov_tipo'      => TipoIdentificacion::Extranjero,
-            'prov_nombre'    => 'Proveedor Extranjero Test LLC',
-            'prov_email'     => 'test@proveedor-externo.com',
-            'prov_direccion' => 'Test City, Test Country',
-        ];
+test('emitir factura compra extranjero', function () {
+    $documento = uniqueDocumento('FC');
+    $fecha     = date('Y-m-d H:i:s');
+    $tipodoc   = '16'; // Extranjero
 
-        $detalle = [
-            new LineaDetalle(codigo: 'EXT-01', unidad: UnidadServicio::ServiciosProfesionales, descripcion: 'Servicio de hosting prueba', cantidad: 1, precio: 50, cabys: '8314100000100', impuesto: 13)
-        ];
+    $proveedor = [
+        'prov_cedula'    => '999999999999',
+        'prov_tipo'      => TipoIdentificacion::Extranjero,
+        'prov_nombre'    => 'Proveedor Extranjero Test LLC',
+        'prov_email'     => 'test@proveedor-externo.com',
+        'prov_telefono'  => '00000000',
+        'prov_direccion' => 'Test City, Test Country',
+    ];
 
-        $response = static::altcom()
-            ->compras()
-            ->emitir(documento: $documento, fecha: $fecha, tipodoc: $tipodoc, moneda: Moneda::fromIso('USD'), mediopago: MedioPagoTipo::Transferencia, tipopago: TipoPago::Contado, proveedor: $proveedor, detalle: $detalle);
+    $detalle = [
+        new LineaDetalle(
+            codigo: 'EXT-01',
+            unidad: UnidadServicio::ServiciosProfesionales,
+            descripcion: 'Servicio de hosting prueba',
+            cantidad: 1,
+            precio: 50,
+            cabys: '8315100000000',
+            impuesto: 13,
+        ),
+    ];
 
-        $this->assertTrue($response->success);
-        $this->assertSame('Aplicado', $response->respuesta);
-        $this->assertNotEmpty($response->getClave());
-    }
-}
+    $response = altcom()
+        ->compras()
+        ->emitir(
+            documento: $documento,
+            fecha: $fecha,
+            tipodoc: $tipodoc,
+            moneda: Moneda::fromIso('USD'),
+            mediopago: MedioPagoTipo::Transferencia,
+            tipopago: TipoPago::Contado,
+            proveedor: $proveedor,
+            detalle: $detalle,
+        );
+
+    expect($response->success)->toBeTrue()
+        ->and($response->respuesta)->toBe('Aplicado')
+        ->and($response->getClave())->not->toBeEmpty();
+})->group('integration');

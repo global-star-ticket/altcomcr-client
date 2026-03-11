@@ -1,40 +1,32 @@
 <?php
 
-namespace Altcomcr\Client\Tests\Integration;
+beforeAll(function () {
+    validateCredentials();
+});
 
-use Altcomcr\Client\Tests\TestCase;
-use PHPUnit\Framework\Attributes\Group;
+beforeEach(function () {
+    skipIfInvalidCredentials();
+});
 
-#[Group('integration')]
-class ConsultaServiceTest extends TestCase
-{
-    public static function setUpBeforeClass(): void
-    {
-        static::requiresCredentials();
-    }
+test('consultar saldo', function () {
+    $response = altcom()
+        ->consultas()
+        ->saldo();
 
-    public function test_consultar_saldo(): void
-    {
-        $response = static::altcom()
-            ->consultas()
-            ->saldo();
+    expect($response->success)->toBeTrue()
+        ->and($response->respuesta)->toBe('Ok')
+        ->and($response->data)->toHaveKey('vence')
+        ->and($response->data)->toHaveKey('dias');
+})->group('integration');
 
-        $this->assertTrue($response->success);
-        $this->assertSame('Ok', $response->respuesta);
-        $this->assertArrayHasKey('vence', $response->data);
-        $this->assertArrayHasKey('dias', $response->data);
-    }
+test('consultar llave', function () {
+    $response = altcom()
+        ->consultas()
+        ->llave();
 
-    public function test_consultar_llave(): void
-    {
-        $response = static::altcom()
-            ->consultas()
-            ->llave();
-
-        $this->assertTrue($response->success);
-        $this->assertSame('Ok', $response->respuesta);
-        $this->assertArrayHasKey('vence', $response->data);
-        $this->assertArrayHasKey('actividades', $response->data);
-        $this->assertIsArray($response->data['actividades']);
-    }
-}
+    expect($response->success)->toBeTrue()
+        ->and($response->respuesta)->toBe('Ok')
+        ->and($response->data)->toHaveKey('vence')
+        ->and($response->data)->toHaveKey('actividades')
+        ->and($response->data['actividades'])->toBeArray();
+})->group('integration');

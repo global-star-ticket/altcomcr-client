@@ -1,0 +1,37 @@
+{
+    "name": "altcomcr/client",
+    "description": "PHP client for Altcom Costa Rica electronic invoicing API (facturación electrónica)",
+    "keywords": ["altcom", "factura", "costa-rica", "hacienda", "facturacion-electronica", "php"],
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "suggest": {
+        "illuminate/support": "Required for Laravel integration via AltcomServiceProvider (^11.0|^12.0)"
+    },
+    "autoload": {
+        "psr-4": {
+            "Altcomcr\\Client\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Altcomcr\\Client\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Altcomcr\\Client\\AltcomServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
